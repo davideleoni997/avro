@@ -25,16 +25,19 @@ import org.junit.runners.Parameterized;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RunWith(value = Parameterized.class)
 public class ResolverTest {
 
   private Schema readSchema;
   private Schema writeSchema;
-  private Resolver.Action action;
+  private Resolver.Action.Type action;
 
   @Parameterized.Parameters
   public static Collection<Object[]> testParameters() {
+    Logger.getGlobal().log(Level.INFO, "I got here");
     return Arrays.asList(new Object[][] { {
         SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
             .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
@@ -44,16 +47,14 @@ public class ResolverTest {
             .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
             .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
             .noDefault().endRecord(),
-        Resolver.Action.Type.DO_NOTHING },
-
-    });
+        Resolver.Action.Type.RECORD } });
   }
 
-  public ResolverTest(Schema writer, Schema reader, Resolver.Action action) {
+  public ResolverTest(Schema writer, Schema reader, Resolver.Action.Type action) {
     configure(writer, reader, action);
   }
 
-  private void configure(Schema writer, Schema reader, Resolver.Action action) {
+  private void configure(Schema writer, Schema reader, Resolver.Action.Type action) {
     this.writeSchema = writer;
     this.readSchema = reader;
     this.action = action;
@@ -62,7 +63,8 @@ public class ResolverTest {
 
   @Test
   public void testMethod() {
-    Assert.assertEquals(action, Resolver.resolve(writeSchema, readSchema));
+    Logger.getGlobal().log(Level.INFO, "" + Resolver.resolve(writeSchema, readSchema));
+    Assert.assertEquals(action, Resolver.resolve(writeSchema, readSchema).type);
   }
 
 }

@@ -160,6 +160,7 @@
             <includes>
               <!-- Avro naming convention for JUnit tests -->
               <include>**/Test**</include>
+              <include>**/*Test</include>
             </includes>
             <excludes>
               <!-- A few innner classes are not to be tested -->
