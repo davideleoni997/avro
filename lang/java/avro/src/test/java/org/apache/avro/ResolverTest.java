@@ -62,8 +62,7 @@ public class ResolverTest {
   }
 
   @Test
-  public void testMethod() {
-    Logger.getGlobal().log(Level.INFO, "" + Resolver.resolve(writeSchema, readSchema));
+  public void testResolve() {
     Assert.assertEquals(action, Resolver.resolve(writeSchema, readSchema).type);
   }
 
