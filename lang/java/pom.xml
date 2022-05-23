@@ -185,7 +185,7 @@
                  rather than the console. -->
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <failIfNoTests>false</failIfNoTests>
-            <argLine>-Xmx1000m</argLine>
+            <argLine>-Xmx2G -Djava.net.preferIPv4Stack=true -Dio.netty.leakDetection.level=paranoid</argLine>
           </configuration>
         </plugin>
         <plugin>
@@ -432,7 +432,7 @@
               <enableAssertions>false</enableAssertions>
               <forkCount>1</forkCount>
               <reuseForks>true</reuseForks>
-              <redirectTestOutputToFile>false</redirectTestOutputToFile>
+              <redirectTestOutputToFile>true</redirectTestOutputToFile>
               <systemPropertyVariables>
                 <test.dir>../../../build/interop/data/</test.dir>
               </systemPropertyVariables>
