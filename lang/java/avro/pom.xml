@@ -46,6 +46,8 @@
     <osgi.export>org.apache.avro*;version="${project.version}"</osgi.export>
     <sonar.organization>davideleoni997</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+
+    <sonar.coverage.jacoco.xmlReportPaths>${basedir}/../${aggregate.report.dir}</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <build>
