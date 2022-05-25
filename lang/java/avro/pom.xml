@@ -130,6 +130,9 @@
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
             <version>0.8.6</version>
+            <configuration>
+              <outputDirectory>${project.basedir}/../tests/target/jacoco/jacoco.exe</outputDirectory>
+            </configuration>
             <executions>
               <execution>
                 <id>prepare-agent</id>

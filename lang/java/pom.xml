@@ -39,7 +39,10 @@
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-    <sonar.jacoco.reportPath>${basedir}/avro/target/site/jacoco/jacoco.xml</sonar.jacoco.reportPath>
+    <sonar.language>java</sonar.language>
+    <sonar.jacoco.reportPath>${basedir}/tests/target/jacoco/jacoco.xml</sonar.jacoco.reportPath>
+
+
     <!-- version properties for dependencies -->
     <hadoop.version>3.3.2</hadoop.version>
     <jackson-bom.version>2.12.6.20220326</jackson-bom.version>
@@ -100,9 +103,17 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.sonarsource.scanner.maven</groupId>
-          <artifactId>sonar-maven-plugin</artifactId>
-          <version>3.9.1.2184</version>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.6</version>
+          <executions>
+            <execution>
+              <id>prepare-agent</id>
+              <goals>
+                <goal>prepare-agent</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -338,6 +349,48 @@
   </reporting>
 
   <profiles>
+    <profile>
+      <id>jacoco</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.0.0-M5</version>
+            <configuration>
+              <argLine>@{argLine}</argLine>
+              <trimStackTrace>false</trimStackTrace>
+              <testFailureIgnore>true</testFailureIgnore>
+              <rerunFailingTestsCount>0</rerunFailingTestsCount>
+              <properties>
+                <property>
+                </property>
+              </properties>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.6</version>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>report</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>m2e</id>
       <activation>
