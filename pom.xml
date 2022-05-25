@@ -57,6 +57,11 @@
     <spotless-maven-plugin.version>2.19.1</spotless-maven-plugin.version>
     <surefire.version>3.0.0-M5</surefire.version>
     <aggregate.report.dir>tests/target/site/jacoco-aggregate/jacoco.xml</aggregate.report.dir>
+    <sonar.organization>davideleoni997</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+    <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+    <sonar.jacoco.reportPath>${basedir}lang/java/avro/target/site/jacoco/jacoco.xml</sonar.jacoco.reportPath>
   </properties>
 
   <modules>
