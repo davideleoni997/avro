@@ -43,7 +43,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RunWith(value = Parameterized.class)
-public class IntegrationResponseRequestTest {
+public class ITResponseRequest {
 
   private static Protocol proto;
   private Transceiver transceiver;
@@ -111,8 +111,7 @@ public class IntegrationResponseRequestTest {
         { "simple", "notInProtocol", new Object[][] {}, NullPointerException.class } });
   }
 
-  public IntegrationResponseRequestTest(String protocol, String method, Object[][] params, Object result)
-      throws IOException {
+  public ITResponseRequest(String protocol, String method, Object[][] params, Object result) throws IOException {
     configure(protocol, method, params, result);
   }
 
