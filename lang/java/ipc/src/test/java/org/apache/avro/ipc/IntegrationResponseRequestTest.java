@@ -37,9 +37,10 @@ import org.junit.runners.Parameterized;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RunWith(value = Parameterized.class)
 public class IntegrationResponseRequestTest {
@@ -65,6 +66,9 @@ public class IntegrationResponseRequestTest {
     public Object respond(Protocol.Message message, Object request) throws Exception {
       GenericRecord received = (GenericRecord) request;
 
+      if (message.getName().equals("ack"))
+        return null;
+
       if (message.getName().equals("hello"))
         return new Utf8("goodbye");
 
@@ -77,7 +81,18 @@ public class IntegrationResponseRequestTest {
         throw new AvroRemoteException(error);
       }
 
-      throw new AvroRuntimeException("Invalid message :" + message.getName());
+      if (message.getName().equals("send")) {
+        GenericRecord data = (GenericRecord) received.get("message");
+        Logger.getGlobal().log(Level.INFO, "Received message :" + data.get("body"));
+        return "sent";
+      }
+
+      if (message.getName().equals("fireandforget")) {
+        Logger.getGlobal().log(Level.INFO, "Received message :" + received.get("message"));
+        return null;
+      }
+
+      throw new AvroRuntimeException("Not implemented :" + message.getName());
     }
   }
 
@@ -91,7 +106,9 @@ public class IntegrationResponseRequestTest {
     return Arrays.asList(new Object[][] { { "simple", "ack", new Object[][] {}, null },
         { "simple", "hello", new Object[][] { { "greeting", "bob" } }, new Utf8("goodbye") },
         { "mail", "fireandforget", new Object[][] { { "message", message } }, null },
-        { "mail", "send", new Object[][] { { "message", message } }, "sent" }, });
+        { "mail", "send", new Object[][] { { "message", message } }, new Utf8("sent") },
+        { "simple", "add", new Object[][] { { "arg1", 1 }, { "arg2", 2 } }, AvroRuntimeException.class },
+        { "simple", "notInProtocol", new Object[][] {}, NullPointerException.class } });
   }
 
   public IntegrationResponseRequestTest(String protocol, String method, Object[][] params, Object result)
@@ -120,13 +137,18 @@ public class IntegrationResponseRequestTest {
 
   @Test
   public void testResponseRequest() throws Exception {
-    GenericData.Record record = new GenericData.Record(proto.getMessages().get(method).getRequest());
+    try {
+      GenericData.Record record = new GenericData.Record(proto.getMessages().get(method).getRequest());
 
-    if (params.length > 0)
-      for (int i = 0; i < params.length; i++) {
-        record.put(params[i][0].toString(), params[i][1]);
-      }
-    Assert.assertEquals(this.result, req.request(this.method, record));
+      if (params.length > 0)
+        for (int i = 0; i < params.length; i++) {
+          record.put(params[i][0].toString(), params[i][1]);
+        }
+
+      Assert.assertEquals(this.result, req.request(this.method, record));
+    } catch (Exception e) {
+      Assert.assertEquals(this.result, e.getClass());
+    }
   }
 
   @After
