@@ -122,7 +122,7 @@ public class ITResponseRequest {
     this.method = method;
     this.params = params;
     this.result = result;
-    server = new SaslSocketServer(new EasyResponder(proto), new InetSocketAddress(420));
+    server = new SaslSocketServer(new EasyResponder(proto), new InetSocketAddress(0));
 
   }
 
