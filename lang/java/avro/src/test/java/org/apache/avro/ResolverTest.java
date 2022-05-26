@@ -37,17 +37,28 @@ public class ResolverTest {
 
   @Parameterized.Parameters
   public static Collection<Object[]> testParameters() {
-    Logger.getGlobal().log(Level.INFO, "I got here");
-    return Arrays.asList(new Object[][] { {
-        SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
+    return Arrays.asList(new Object[][] {
+        { SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
             .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
             .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
             .noDefault().endRecord(),
-        SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
-            .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
-            .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
-            .noDefault().endRecord(),
-        Resolver.Action.Type.RECORD } });
+            SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
+                .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
+                .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
+                .noDefault().endRecord(),
+            Resolver.Action.Type.RECORD },
+        { SchemaBuilder.fixed("HandshakeRequest").namespace("org.apache.avro.ipc").size(16),
+            SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
+                .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
+                .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
+                .noDefault().endRecord(),
+            Resolver.Action.Type.ERROR },
+        { null,
+            SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
+                .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
+                .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
+                .noDefault().endRecord(),
+            Resolver.Action.Type.ERROR }, });
   }
 
   public ResolverTest(Schema writer, Schema reader, Resolver.Action.Type action) {
@@ -63,7 +74,11 @@ public class ResolverTest {
 
   @Test
   public void testResolve() {
-    Assert.assertEquals(action, Resolver.resolve(writeSchema, readSchema).type);
+    try {
+      Assert.assertEquals(action, Resolver.resolve(writeSchema, readSchema).type);
+    } catch (Exception e) {
+      Assert.assertEquals(e.getClass(), NullPointerException.class);
+    }
   }
 
 }
