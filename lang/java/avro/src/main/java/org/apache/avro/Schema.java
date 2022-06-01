@@ -127,7 +127,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     private final String name;
 
-    Type() {
+    private Type() {
       this.name = this.name().toLowerCase(Locale.ENGLISH);
     }
 
