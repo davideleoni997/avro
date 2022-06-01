@@ -83,7 +83,9 @@ public class ITResponseRequest {
 
       if (message.getName().equals("send")) {
         GenericRecord data = (GenericRecord) received.get("message");
-        Logger.getGlobal().log(Level.INFO, "Received message :" + data.get("body"));
+        Logger.getGlobal().log(Level.INFO, "Received message from :" + data.get("from"));
+        Logger.getGlobal().log(Level.INFO, "Message to:" + data.get("to"));
+        Logger.getGlobal().log(Level.INFO, "Content :" + data.get("body"));
         return "sent";
       }
 
@@ -108,7 +110,8 @@ public class ITResponseRequest {
         { "mail", "fireandforget", new Object[][] { { "message", message } }, null },
         { "mail", "send", new Object[][] { { "message", message } }, new Utf8("sent") },
         { "simple", "add", new Object[][] { { "arg1", 1 }, { "arg2", 2 } }, AvroRuntimeException.class },
-        { "simple", "notInProtocol", new Object[][] {}, NullPointerException.class } });
+        { "simple", "notInProtocol", new Object[][] {}, NullPointerException.class },
+    });
   }
 
   public ITResponseRequest(String protocol, String method, Object[][] params, Object result) throws IOException {
@@ -119,6 +122,7 @@ public class ITResponseRequest {
 
     File f = new File("../../../share/test/schemas/" + protocol + ".avpr");
     this.proto = Protocol.parse(f);
+
     this.method = method;
     this.params = params;
     this.result = result;
