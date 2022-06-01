@@ -30,6 +30,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.mockito.Mockito.when;
 
@@ -45,6 +47,7 @@ public class ResolverTest {
   @Parameterized.Parameters
   public static Collection<Object[]> testParameters() {
     return Arrays.asList(new Object[][] {
+
         { null,
             SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
                 .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
@@ -53,8 +56,10 @@ public class ResolverTest {
             Resolver.Action.Type.ERROR },
         { SchemaBuilder.fixed("HandshakeRequest").namespace("org.apache.avro.ipc").size(16), null,
             Resolver.Action.Type.ERROR },
+
         { SchemaBuilder.builder("testInt").intType(), SchemaBuilder.builder("testInt").intType(),
             Resolver.Action.Type.DO_NOTHING },
+
         { SchemaBuilder.enumeration("testEnum").symbols("Value1", "Value2", "value3"),
             SchemaBuilder.enumeration("testEnum").symbols("Value1", "value2", "value5"), Resolver.Action.Type.ENUM },
         { SchemaBuilder.array().items(SchemaBuilder.builder().booleanType()),
@@ -71,6 +76,9 @@ public class ResolverTest {
             Resolver.Action.Type.RECORD },
         { SchemaBuilder.builder().intType(), SchemaBuilder.builder().longType(), Resolver.Action.Type.PROMOTE },
         { SchemaBuilder.fixed("Fixed").size(10), SchemaBuilder.fixed("Fixed").size(8), Resolver.Action.Type.ERROR },
+        { SchemaBuilder.fixed("Fixed").size(10), SchemaBuilder.fixed("Fixed").size(10),
+            Resolver.Action.Type.DO_NOTHING },
+        { SchemaBuilder.fixed("Fixed2").size(10), SchemaBuilder.fixed("Fixed").size(10), Resolver.Action.Type.ERROR },
         { SchemaBuilder.map().values(SchemaBuilder.builder().intType()),
             SchemaBuilder.map().values(SchemaBuilder.builder().intType()), Resolver.Action.Type.CONTAINER },
         /*
@@ -88,8 +96,8 @@ public class ResolverTest {
 
   private void configure(Schema writer, Schema reader, Resolver.Action.Type action)
       throws NoSuchFieldException, IllegalAccessException {
-    if (action.equals(Resolver.Action.Type.SKIP)) {
-      type = Mockito.mock(Schema.Type.class);
+    if (action.equals(Resolver.Action.Type.SKIP)) { //Dato che il test è commentato non verrà mai eseguito
+      type = Mockito.mock(Schema.Type.class); //Mantenuto per cronaca
       when(type.getName()).thenReturn("value");
       Field field = Schema.class.getDeclaredField("type");
       Field modifiers = Field.class.getDeclaredField("modifiers");
@@ -107,14 +115,18 @@ public class ResolverTest {
 
   @Test
   public void testResolve() {
+    Resolver.Action resultAction = null;
     try {
-      Assert.assertEquals(action, Resolver.resolve(writeSchema, readSchema).type);
+      resultAction = Resolver.resolve(writeSchema, readSchema);
     } catch (Exception e) {
-      if (writeSchema == null || !writeSchema.getName().equals("invalid"))
-        Assert.assertEquals(e.getClass(), NullPointerException.class);
-      else
-        Assert.assertEquals(e.getClass(), IllegalArgumentException.class);
+
+      Assert.assertEquals(e.getClass(), NullPointerException.class);
+      return;
     }
+    if (resultAction == null)
+      Assert.fail();
+    else
+      Assert.assertEquals(action, resultAction.type);
   }
 
 }
