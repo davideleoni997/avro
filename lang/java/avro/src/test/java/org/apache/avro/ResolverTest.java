@@ -96,8 +96,8 @@ public class ResolverTest {
 
   private void configure(Schema writer, Schema reader, Resolver.Action.Type action)
       throws NoSuchFieldException, IllegalAccessException {
-    if (action.equals(Resolver.Action.Type.SKIP)) { //Dato che il test è commentato non verrà mai eseguito
-      type = Mockito.mock(Schema.Type.class); //Mantenuto per cronaca
+    if (action.equals(Resolver.Action.Type.SKIP)) { // Dato che il test è commentato non verrà mai eseguito
+      type = Mockito.mock(Schema.Type.class); // Mantenuto per cronaca
       when(type.getName()).thenReturn("value");
       Field field = Schema.class.getDeclaredField("type");
       Field modifiers = Field.class.getDeclaredField("modifiers");
