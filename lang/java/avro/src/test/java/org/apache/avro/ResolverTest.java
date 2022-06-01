@@ -23,10 +23,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import org.mockito.Mock;
+import org.mockito.Mockito;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import static org.mockito.Mockito.when;
 
 @RunWith(value = Parameterized.class)
 public class ResolverTest {
@@ -34,38 +39,66 @@ public class ResolverTest {
   private Schema readSchema;
   private Schema writeSchema;
   private Resolver.Action.Type action;
+  @Mock
+  private Schema.Type type;
 
   @Parameterized.Parameters
   public static Collection<Object[]> testParameters() {
     return Arrays.asList(new Object[][] {
-        { SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
-            .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
-            .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
-            .noDefault().endRecord(),
-            SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
-                .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
-                .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
-                .noDefault().endRecord(),
-            Resolver.Action.Type.RECORD },
-        { SchemaBuilder.fixed("HandshakeRequest").namespace("org.apache.avro.ipc").size(16),
-            SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
-                .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
-                .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
-                .noDefault().endRecord(),
-            Resolver.Action.Type.ERROR },
         { null,
             SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientHash").type()
                 .fixed("MD5").size(16).noDefault().name("clientProtocol").type().nullable().stringType().noDefault()
                 .name("serverHash").type("MD5").noDefault().name("meta").type().nullable().map().values().bytesType()
                 .noDefault().endRecord(),
-            Resolver.Action.Type.ERROR }, });
+            Resolver.Action.Type.ERROR },
+        { SchemaBuilder.fixed("HandshakeRequest").namespace("org.apache.avro.ipc").size(16), null,
+            Resolver.Action.Type.ERROR },
+        { SchemaBuilder.builder("testInt").intType(), SchemaBuilder.builder("testInt").intType(),
+            Resolver.Action.Type.DO_NOTHING },
+        { SchemaBuilder.enumeration("testEnum").symbols("Value1", "Value2", "value3"),
+            SchemaBuilder.enumeration("testEnum").symbols("Value1", "value2", "value5"), Resolver.Action.Type.ENUM },
+        { SchemaBuilder.array().items(SchemaBuilder.builder().booleanType()),
+            SchemaBuilder.array().items(SchemaBuilder.builder().stringType()), Resolver.Action.Type.CONTAINER },
+        { SchemaBuilder.unionOf().fixed("Part1").size(5).and().fixed("Part2").size(3).endUnion(),
+            SchemaBuilder.fixed("Part3").size(5), Resolver.Action.Type.WRITER_UNION },
+        { SchemaBuilder.fixed("Part1").size(5),
+            SchemaBuilder.unionOf().fixed("Part1").size(5).and().fixed("Part2").size(3).endUnion(),
+            Resolver.Action.Type.READER_UNION },
+        { SchemaBuilder.record("Record").fields().name("Field1").type().intType().noDefault().name("Field2").type()
+            .nullType().noDefault().endRecord(),
+            SchemaBuilder.record("Record").fields().name("Field1").type().intType().noDefault().name("Field2").type()
+                .nullType().noDefault().endRecord(),
+            Resolver.Action.Type.RECORD },
+        { SchemaBuilder.builder().intType(), SchemaBuilder.builder().longType(), Resolver.Action.Type.PROMOTE },
+        { SchemaBuilder.fixed("Fixed").size(10), SchemaBuilder.fixed("Fixed").size(8), Resolver.Action.Type.ERROR },
+        { SchemaBuilder.map().values(SchemaBuilder.builder().intType()),
+            SchemaBuilder.map().values(SchemaBuilder.builder().intType()), Resolver.Action.Type.CONTAINER },
+        /*
+         * { SchemaBuilder.record("invalid").fields().endRecord(),
+         * SchemaBuilder.record("invalid").fields().endRecord(),
+         * Resolver.Action.Type.SKIP },
+         */
+    });
   }
 
-  public ResolverTest(Schema writer, Schema reader, Resolver.Action.Type action) {
+  public ResolverTest(Schema writer, Schema reader, Resolver.Action.Type action)
+      throws NoSuchFieldException, IllegalAccessException {
     configure(writer, reader, action);
   }
 
-  private void configure(Schema writer, Schema reader, Resolver.Action.Type action) {
+  private void configure(Schema writer, Schema reader, Resolver.Action.Type action)
+      throws NoSuchFieldException, IllegalAccessException {
+    if (action.equals(Resolver.Action.Type.SKIP)) {
+      type = Mockito.mock(Schema.Type.class);
+      when(type.getName()).thenReturn("value");
+      Field field = Schema.class.getDeclaredField("type");
+      Field modifiers = Field.class.getDeclaredField("modifiers");
+      field.setAccessible(true);
+      modifiers.setAccessible(true);
+      modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+      field.set(writer, type);
+      field.set(reader, type);
+    }
     this.writeSchema = writer;
     this.readSchema = reader;
     this.action = action;
@@ -77,7 +110,10 @@ public class ResolverTest {
     try {
       Assert.assertEquals(action, Resolver.resolve(writeSchema, readSchema).type);
     } catch (Exception e) {
-      Assert.assertEquals(e.getClass(), NullPointerException.class);
+      if (writeSchema == null || !writeSchema.getName().equals("invalid"))
+        Assert.assertEquals(e.getClass(), NullPointerException.class);
+      else
+        Assert.assertEquals(e.getClass(), IllegalArgumentException.class);
     }
   }
 
