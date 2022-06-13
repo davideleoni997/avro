@@ -96,9 +96,11 @@
             <configuration>
               <targetClasses>
                 <param>org.apache.avro.Resolver</param>
+                <param>org.apache.avro.Schema</param>
               </targetClasses>
               <targetTests>
                 <param>org.apache.avro.ResolverTest</param>
+                <param>org.apache.avro.SchemaTest</param>
               </targetTests>
             </configuration>
             <executions>

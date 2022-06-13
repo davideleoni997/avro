@@ -110,8 +110,7 @@ public class ITResponseRequest {
         { "mail", "fireandforget", new Object[][] { { "message", message } }, null },
         { "mail", "send", new Object[][] { { "message", message } }, new Utf8("sent") },
         { "simple", "add", new Object[][] { { "arg1", 1 }, { "arg2", 2 } }, AvroRuntimeException.class },
-        { "simple", "notInProtocol", new Object[][] {}, NullPointerException.class },
-    });
+        { "simple", "notInProtocol", new Object[][] {}, NullPointerException.class }, });
   }
 
   public ITResponseRequest(String protocol, String method, Object[][] params, Object result) throws IOException {
